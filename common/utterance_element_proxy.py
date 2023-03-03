@@ -8,20 +8,20 @@ import logging
 
 class UtteranceElementProxy:
 	
-
 	def __init__(self, prompt_tags, utterance_element_request_function, broker_config, service_name):
 		self.prompt_tags = prompt_tags
 		self.utterance_element_request_function = utterance_element_request_function
 		self.broker_config =  broker_config
 		self.service_name = service_name
 
-		# Define the names of the queues and exchanges (TO_DO MAKE THESE CONFIGURABLE/ANANOMOUS FOR MULTIPLE INSTANCED!)
+		# Define the names of the queues and exchanges
+		# All Utterance Proxies Listen on the same exchange
+		# All instances of a service type using a proxy use the same q (appended with _service name)
 		self.uttance_element_request_exchange_name = 'utterance_element_request'		 # Exchange used for conversations
 		self.receive_queue_name = f'utterance_elements_requests_for_{service_name}' # Listen here for requests for utterance elements
 		
-		# Note: TO_DO - this q should be set to the q of the specific requesting service's instance
+		# Exchange to send responses back to - the routing_key is use to route to requesters specific q (included in the request message)
 		self.utterance_element_response_exchange_name = 'utterance_elements_response'
-		self.utterance_elements_queue = 'utterance_elements_queue'   # Q to push the response back to
 
 		self.setup_event_queues()
 
@@ -36,18 +36,16 @@ class UtteranceElementProxy:
 		channel = connection.channel()
 
 		# The queue to listen on.  The exchange fans the messages to all utterance element provider Qs
-		# there's one for each service type
+		# there's one for each service type - and all instances of a service listen on the same q
 		channel.exchange_declare(exchange=self.uttance_element_request_exchange_name, exchange_type='fanout')
 		channel.queue_declare(queue=self.receive_queue_name)
 		channel.queue_bind(exchange=self.uttance_element_request_exchange_name, queue=self.receive_queue_name)
 
-		# Set up the  queue and exchange (to send messages out to)
-		channel.queue_declare(queue=self.utterance_elements_queue)
-		channel.exchange_declare(exchange=self.utterance_element_response_exchange_name, exchange_type='direct')
-		channel.queue_bind(queue=self.utterance_elements_queue, exchange=self.utterance_element_response_exchange_name, routing_key='')
-
 		# Listen for messages on the request queue
 		channel.basic_consume(queue=self.receive_queue_name, on_message_callback=self.on_element_request_message, auto_ack=True)
+
+		# Set up the exchange (to send messages out to)
+		channel.exchange_declare(exchange=self.utterance_element_response_exchange_name, exchange_type='direct')
 
 		self.channel = channel
 

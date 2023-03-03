@@ -61,7 +61,7 @@ if __name__ == '__main__':
 	# Note the Class is used in the dict not the class name
 	
 	microservice_list = [
-		{'service_class':fred, 'own_process':True,  'count':3},
+		{'service_class':fred, 'own_process':True,  'count':},
 		{'service_class':jim,  'own_process':True, 'count':3},
 		{'service_class':ConstitutionService,  'own_process':True, 'count':3}
 	]

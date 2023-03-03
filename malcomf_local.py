@@ -10,16 +10,17 @@ import logging
 import threading
 
 
-from constitution_service.constitution_service import ConstitutionService
-from personality_service.personality_service import PersonalityService
-from conversation_turn_service.conversation_turn_service import ConversationTurnService
+from constitution.constitution_service import ConstitutionService
+from personality.personality_service import PersonalityService
+from conversation_turn.conversation_turn_service import ConversationTurnService
+from conversation_turn.conversation_turn_structure_service import ConversationUtteranceStructureService
 
 if __name__ == '__main__':
 	
 	# Configure logging to write to a file
 	log_file = "malcomf_local.log"
 	file_handler = logging.FileHandler(log_file)
-	file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(process)d %(threadName)s: %(message)s'))
+	file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(process)d %(filename)s:%(lineno)d %(threadName)s: %(message)s'))
 	root_logger = logging.getLogger()
 	root_logger.addHandler(file_handler)
 	root_logger.setLevel(logging.INFO)
@@ -38,7 +39,8 @@ if __name__ == '__main__':
 	microservice_list = [
 		{'service_class':ConstitutionService, 'own_process':False, 'count':1},
 		{'service_class':PersonalityService, 'own_process':False, 'count':1},
-		{'service_class':ConversationTurnService, 'own_process':False, 'count':1}
+		{'service_class':ConversationTurnService, 'own_process':False, 'count':1},
+		{'service_class':ConversationUtteranceStructureService, 'own_process':False, 'count':1}
 	]
 	
 	broker_config = {'rabbitmq': {'host':'localhost'}} 

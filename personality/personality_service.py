@@ -13,12 +13,14 @@ from common.utterance_element_proxy import UtteranceElementProxy
 
 class PersonalityService:
 	def __init__(self, broker_config):
-		self.proxy = UtteranceElementProxy(["Personality"], self.provide_personality_fragment, broker_config, 'Personality')
+		self.proxy = UtteranceElementProxy(["Personality","life_stage"], self.provide_personality_fragment, broker_config, 'Personality')
 
 	def provide_personality_fragment(self, keys, context):
-		personality_fragment = 'I am an adult with a sophisticated palette, I prefer brief and to the point conversations'
+		# TO DO only send requested fragements, and base the returned fragments on the context
+		personality_fragment = 'I am an <{life_stage}> with a sophisticated palette, I prefer brief and to the point conversations'
+		life_stage_fragment = 'adult'
 		logging.info(f'Personality Service - {keys} requested in context {context}\nReturning: \"{personality_fragment}\"')
-		return_data = {'Personality':personality_fragment}
+		return_data = {'Personality':personality_fragment, 'life_stage':life_stage_fragment}
 		return return_data
 
 	def run(self):
