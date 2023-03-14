@@ -13,7 +13,7 @@ import threading
 from constitution.constitution_service import ConstitutionService
 from personality.personality_service import PersonalityService
 from conversation_turn.conversation_turn_service import ConversationTurnService
-from conversation_turn.conversation_turn_structure_service import ConversationUtteranceStructureService
+from utterance_structure.utterance_structure_service import ConversationUtteranceStructureService
 
 if __name__ == '__main__':
 	

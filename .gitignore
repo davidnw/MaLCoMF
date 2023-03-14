@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# generated_log files
+*.log
+
+# specifc key files
+api_keys.py
+
 # mac hidden files
 .DS_Store
 

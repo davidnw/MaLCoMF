@@ -5,6 +5,8 @@
 import logging
 import openai
 from api_keys import openai_apikey
+import random
+import time
 
 # define a retry decorator to manage rate limits
 def retry_with_exponential_backoff(
@@ -50,11 +52,6 @@ def retry_with_exponential_backoff(
 
     return wrapper
 
-def get_embedding(text, engine='text-embedding-ada-002'):
-    response = embeddings_with_backoff(input=text,engine=engine)
-    vector = response['data'][0]['embedding']  # this is a normal list
-    return vector
-
 	# define a function for embeddings with the back off function
 @retry_with_exponential_backoff
 def embeddings_with_backoff(**kwargs):
@@ -62,13 +59,19 @@ def embeddings_with_backoff(**kwargs):
 
 @retry_with_exponential_backoff
 def completions_with_backoff(**kwargs):
-    return openai.Completion.create(**kwargs)    
+    return openai.Completion.create(**kwargs)
+
+@retry_with_exponential_backoff
+def get_chat_completion_with_backoff(**kwargs):
+	return openai.ChatCompletion.create(**kwargs)
+
 
 # The default values can be set at init at a class level and, if desired, overwritten on each functional call
 class OpenAILLMProxy:
 	def __init__(self, 
 			default_embeddings_engine='text-embedding-ada-002',
 			default_completion_engine='text-davinci-003',
+			default_chat_completion_engine='gpt-3.5-turbo',
 			default_temp=0.3,
 			default_top_p=1.0,
 			default_tokens=500,
@@ -78,11 +81,13 @@ class OpenAILLMProxy:
 
 		self.default_embeddings_engine = default_embeddings_engine
 		self.default_completion_engine = default_completion_engine
+		self.default_chat_completion_engine = default_chat_completion_engine
 		self.default_temp = default_temp
 		self.default_top_p = default_top_p
 		self.default_tokens = default_tokens
 		self.default_freq_pen = default_freq_pen
 		self.default_pres_pen = default_pres_pen
+
 
 		openai.api_key = openai_apikey
 		
@@ -113,9 +118,55 @@ class OpenAILLMProxy:
                         frequency_penalty=freq_pen,
                         presence_penalty=pres_pen)
 
+		logging.info(f'Prompt to LLM : {text}')
+
 		logging.info(f'Completion response: {response}')
 
 		return response['choices'][0]['text']
+
+	def get_chat_completion(self, chat_history, **kwargs):
+
+		model=kwargs.get('completion_engine',self.default_chat_completion_engine)
+		temp=kwargs.get('temperature',self.default_temp)
+		top_p=kwargs.get('top_p',self.default_top_p)
+		tokens=kwargs.get('max_tokens',self.default_tokens)
+		freq_pen=kwargs.get('frequency_penalty',self.default_freq_pen)
+		pres_pen=kwargs.get('presence_penalty',self.default_pres_pen)
+
+		choices = kwargs.get('choices', 1)
+
+
+		# TODO manage messages
+		# For now just add the conversation for completion as a single user message
+		messages = [{'role':'user', 'content':chat_history}]
+
+		logging.info(f'Prompt to LLM : {chat_history}')
+
+		logging.info(f'Model {model} messages {messages}')
+
+		response = get_chat_completion_with_backoff(
+			model=model,
+			messages=messages)
+
+		logging.info(f'Chat response {response}')
+
+		return response['choices'][0]['message']['content']
+
+"""
+		response = get_chat_completion_with_backoff(
+			engine=model,
+			messages=messages,
+			temperature=temp,
+			top_p=top_p,
+			n=choices,
+			max_tokens=tokens,
+			presence_penalty=pres_pen,
+			frequency_penalty=freq_pen)
+"""
+		
+
+
+		
 
 
 

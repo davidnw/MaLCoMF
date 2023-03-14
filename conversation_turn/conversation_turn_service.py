@@ -149,7 +149,8 @@ class ConversationTurnService:
 		return replaced['conversation_utterance_structure']
 
 	def send_utterance_and_process_response(self, utterance_id, utterance_text):
-		response = self.llm_proxy.get_completion(utterance_text)
+		#response = self.llm_proxy.get_completion(utterance_text)
+		response = self.llm_proxy.get_chat_completion(utterance_text)
 
 		# send the reponse back to the queue that requested this conversation turn...
 		context = self.utterance_cache.get_context(utterance_id)
